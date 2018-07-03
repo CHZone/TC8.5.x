@@ -825,7 +825,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      */
     @Override
     protected void initInternal() throws LifecycleException {
-
+        CAILogUtils.showClassThisMethod(this, "StandardServer", "initInternal()");
         super.initInternal();
 
         // Register global String cache
@@ -872,6 +872,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         }
         // Initialize our defined Services
         for (int i = 0; i < services.length; i++) {
+        	CAILogUtils.message("开始执行StandardService.init() ");
             services[i].init();
         }
     }

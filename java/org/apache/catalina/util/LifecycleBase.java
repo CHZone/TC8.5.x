@@ -25,6 +25,7 @@ import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.LifecycleState;
+import org.apache.catalina.core.CAILogUtils;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -90,7 +91,10 @@ public abstract class LifecycleBase implements Lifecycle {
      */
     protected void fireLifecycleEvent(String type, Object data) {
         LifecycleEvent event = new LifecycleEvent(this, type, data);
+        CAILogUtils.showClassThisMethod(this, "LifecycleBase", "fireLifecycleEvent");
+        CAILogUtils.message("LifecycleEvent"+event.getType());
         for (LifecycleListener listener : lifecycleListeners) {
+        	CAILogUtils.message("Listener: "+listener.getClass().getSimpleName());
             listener.lifecycleEvent(event);
         }
     }
@@ -98,13 +102,14 @@ public abstract class LifecycleBase implements Lifecycle {
 
     @Override
     public final synchronized void init() throws LifecycleException {
+    	CAILogUtils.showClassThisMethod(this, "LifecycleBase", "init");
         if (!state.equals(LifecycleState.NEW)) {
             invalidTransition(Lifecycle.BEFORE_INIT_EVENT);
         }
 
         try {
-            setStateInternal(LifecycleState.INITIALIZING, null, false);
-            initInternal();
+            setStateInternal(LifecycleState.INITIALIZING, null, false);//该类中实现
+            initInternal();// 具体容器中实现
             setStateInternal(LifecycleState.INITIALIZED, null, false);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -357,7 +362,8 @@ public abstract class LifecycleBase implements Lifecycle {
 
     private synchronized void setStateInternal(LifecycleState state,
             Object data, boolean check) throws LifecycleException {
-
+    	CAILogUtils.showClassThisMethod(this, "LifecycleBase", "setStateInternal");
+    	CAILogUtils.message("State："+state.getLifecycleEvent());
         if (log.isDebugEnabled()) {
             log.debug(sm.getString("lifecycleBase.setState", this, state));
         }

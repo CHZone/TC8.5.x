@@ -524,10 +524,12 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      */
     @Override
     protected void initInternal() throws LifecycleException {
+        CAILogUtils.showClassThisMethod(this, "StandardService", "initInternal()");
 
         super.initInternal();
 
         if (engine != null) {
+        	CAILogUtils.message("开始执行StandardEngine.init()");
             engine.init();
         }
 

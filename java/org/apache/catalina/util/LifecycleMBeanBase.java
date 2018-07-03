@@ -26,6 +26,7 @@ import javax.management.ObjectName;
 import org.apache.catalina.Globals;
 import org.apache.catalina.JmxEnabled;
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.core.CAILogUtils;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.modeler.Registry;
@@ -56,6 +57,8 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
         // If oname is not null then registration has already happened via
         // preRegister().
         if (oname == null) {
+        	CAILogUtils.showClassThisMethod(this, "LifecycleMBeanBase", "initInternal");
+        	CAILogUtils.message("Registry MBean :" + this.getClass().getSimpleName());
             mserver = Registry.getRegistry(null, null).getMBeanServer();
 
             oname = register(this, getObjectNameKeyProperties());

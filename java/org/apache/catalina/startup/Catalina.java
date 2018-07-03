@@ -34,6 +34,7 @@ import org.apache.catalina.Container;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Server;
+import org.apache.catalina.core.CAILogUtils;
 import org.apache.catalina.security.SecurityConfig;
 import org.apache.juli.ClassLoaderLogManager;
 import org.apache.juli.logging.Log;
@@ -519,6 +520,9 @@ public class Catalina {
 
 
     /**
+     * 设置sever.xml文件的解析规则
+     * 解析server.xml,创建Server、Connector、Engine、Host，xml配置的Context，并设置相应的属性，没进行目录扫描创建目录部署项目对应的Context。
+     * 执行Server.init()
      * Start a new server instance.
      */
     public void load() {
@@ -529,13 +533,16 @@ public class Catalina {
         loaded = true;
 
         long t1 = System.nanoTime();
-
+        // 临时目录，先不管
         initDirs();
 
+        // 看不懂，不知道干嘛的
         // Before digester - it may be needed
         initNaming();
-
+        
+        // 设置sever.xml文件的解析规则
         // Create and execute our Digester
+        CAILogUtils.message("设置server.xml解析规则");
         Digester digester = createStartDigester();
 
         InputSource inputSource = null;
@@ -600,6 +607,8 @@ public class Catalina {
 
             try {
                 inputSource.setByteStream(inputStream);
+                // 解析server.xml,没进行目录扫描部署
+                CAILogUtils.message("解析server.xml");
                 digester.push(this);
                 digester.parse(inputSource);
             } catch (SAXParseException spe) {
@@ -621,6 +630,7 @@ public class Catalina {
         }
 
         getServer().setCatalina(this);
+        //apache-tomcat-8.5.x\output\build 对应的绝对路径
         getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
 
@@ -629,6 +639,7 @@ public class Catalina {
 
         // Start the new server
         try {
+        	CAILogUtils.message("Catalina调用开始调用StandardServer.init()");
             getServer().init();
         } catch (LifecycleException e) {
             if (Boolean.getBoolean("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE")) {
@@ -676,7 +687,7 @@ public class Catalina {
 
         long t1 = System.nanoTime();
 
-        // Start the new server
+        // Start the new server, 执行Server.start()
         try {
             getServer().start();
         } catch (LifecycleException e) {

@@ -28,6 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.catalina.Globals;
+import org.apache.catalina.core.CAILogUtils;
 import org.apache.catalina.security.SecurityClassLoad;
 import org.apache.catalina.startup.ClassLoaderFactory.Repository;
 import org.apache.catalina.startup.ClassLoaderFactory.RepositoryType;
@@ -140,7 +141,10 @@ public final class Bootstrap {
 
     // -------------------------------------------------------- Private Methods
 
-
+    /**
+     * 初始化CommonClassLoader，CatalinaClassLoader，SharedClassLoader
+     * CommonClassLoader为后面两个的父类加载器。
+     */
     private void initClassLoaders() {
         try {
             commonLoader = createClassLoader("common", null);
@@ -155,6 +159,7 @@ public final class Bootstrap {
             log.error("Class loader creation threw exception", t);
             System.exit(1);
         }
+    	CAILogUtils.message("创建CommonClassLoader，CatalinaClassLoader，SharedClassLoader");
     }
 
 
@@ -249,13 +254,15 @@ public final class Bootstrap {
 
 
     /**
+     * 初始化初始化CommonClassLoader，CatalinaClassLoader，SharedClassLoader
+     * 使用CatalinaClassLoader加载Catalina，
+     * 设置Catalina的父类加载器为SharedClassLoader
      * Initialize daemon.
      * @throws Exception Fatal initialization error
      */
     public void init() throws Exception {
-
         initClassLoaders();
-
+        
         Thread.currentThread().setContextClassLoader(catalinaLoader);
 
         SecurityClassLoad.securityClassLoad(catalinaLoader);
@@ -263,9 +270,11 @@ public final class Bootstrap {
         // Load our startup class and call its process() method
         if (log.isDebugEnabled())
             log.debug("Loading startup class");
+        // Catalina的类加载器设置ClassLoader
         Class<?> startupClass = catalinaLoader.loadClass("org.apache.catalina.startup.Catalina");
         Object startupInstance = startupClass.getConstructor().newInstance();
 
+        // 设置Catalina的父类加载器SharedClassLoader
         // Set the shared extensions class loader
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
@@ -279,12 +288,13 @@ public final class Bootstrap {
         method.invoke(startupInstance, paramValues);
 
         catalinaDaemon = startupInstance;
+    	CAILogUtils.message("CatalinaClassLoader利用反射创建Catalina，Catalina的父类加载器为SharedClassLoader");
 
     }
 
 
     /**
-     * Load daemon.
+     * 执行Catalina的load(String)方法。laod("start");
      */
     private void load(String[] arguments)
         throws Exception {
@@ -342,7 +352,7 @@ public final class Bootstrap {
 
 
     /**
-     * Start the Catalina daemon.
+     * Start the Catalina daemon.执行Catalina.start()
      * @throws Exception Fatal start error
      */
     public void start()
@@ -474,6 +484,7 @@ public final class Bootstrap {
             Thread.currentThread().setContextClassLoader(daemon.catalinaLoader);
         }
 
+        // daemon(Bootstrap)通过反射执行Catalina对应的方法。
         try {
             String command = "start";
             if (args.length > 0) {
@@ -488,9 +499,16 @@ public final class Bootstrap {
                 args[args.length - 1] = "stop";
                 daemon.stop();
             } else if (command.equals("start")) {
+            	// 让 Bootstrap 阻塞，不退出？可以试一下吧true改为false。
                 daemon.setAwait(true);
-                daemon.load(args);
+                CAILogUtils.message("=============开始执行load================");
+                CAILogUtils.message("Bootstrap调用Catalina.laod()");
+                daemon.load(args);// 执行Catalina.load()
+                CAILogUtils.message("=============结束执行load================");
+                CAILogUtils.message("=============开始执行start===============");
+                CAILogUtils.message("Bootstrap调用Catalina.start()");
                 daemon.start();
+                CAILogUtils.message("=============结束执行start==============");
             } else if (command.equals("stop")) {
                 daemon.stopServer(args);
             } else if (command.equals("configtest")) {
